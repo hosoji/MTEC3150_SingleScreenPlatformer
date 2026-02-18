@@ -199,3 +199,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   speed: 200
   direction: {x: 0, y: 0}
+  col: {r: 1, g: 1, b: 1, a: 1}

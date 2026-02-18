@@ -2,13 +2,20 @@ using UnityEngine;
 
 public class Bullet : MonoBehaviour
 {
-    public float speed = 10;
-    public Vector2 direction;
+    [HideInInspector]public float speed = 10;
+    [HideInInspector] public Vector2 direction;
     private Rigidbody2D rb;
+
+    private SpriteRenderer sr;
+    [HideInInspector] public Color col;
 
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
+        sr = GetComponentInChildren<SpriteRenderer>();
+
+        sr.color = col;
+
         
     }
 
@@ -16,6 +23,8 @@ public class Bullet : MonoBehaviour
     {
         rb.linearVelocity = direction * speed * Time.deltaTime;
     }
+
+
 
 
 }

@@ -26,10 +26,18 @@ public class PlayerController : MonoBehaviour
 
     public GameObject bulletPrefab;
 
+    public float bulletSpeed = 200;
+    private float defaultBulletSpeed; 
+    public Color bulletColor = Color.yellow;
+    private Color defaultBulletColor;
+
+
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         facingDirection = 1;
+        defaultBulletSpeed = bulletSpeed;
+        defaultBulletColor = bulletColor;
 
     }
 
@@ -72,6 +80,9 @@ public class PlayerController : MonoBehaviour
             }
         }
 
+        WhenOnPlatform();
+
+        //Debug.Log("Player on platform is :" + IsOnPlatform());
         //Debug.Log(IsGrounded());
         //transform.Translate(xMove * movementSpeed * Time.deltaTime, 0, 0); 
     }
@@ -101,7 +112,13 @@ public class PlayerController : MonoBehaviour
     {
         Vector3 pos = new Vector3(transform.position.x + (attackOffset * facingDirection), transform.position.y, 0);
         GameObject bullet = Instantiate(bulletPrefab, pos, Quaternion.identity);
-        bullet.GetComponent<Bullet>().direction = new Vector2(facingDirection, 0);
+        Bullet bScript = bullet.GetComponent<Bullet>();
+
+        bScript.direction = new Vector2(facingDirection, 0);
+        bScript.col = bulletColor;
+        bScript.speed = bulletSpeed;
+        
+
     }
 
     private bool IsGrounded()
@@ -112,6 +129,30 @@ public class PlayerController : MonoBehaviour
         return Physics2D.CircleCast(transform.position, radius, Vector2.down, dist,ground);
     }
 
+    private void WhenOnPlatform()
+    {
+        if (IsGrounded()) {
+            float radius = GetComponent<Collider2D>().bounds.extents.x;
+            float dist = GetComponent<Collider2D>().bounds.extents.y;
+
+            RaycastHit2D hit;
+            hit = Physics2D.CircleCast(transform.position, radius, Vector2.down, dist, ground);
+
+            if (hit.transform.gameObject.CompareTag("Platform"))
+            {
+                transform.SetParent(hit.transform);
+            }
+            else
+            {
+                transform.SetParent(null);
+            }
+        }
+        else
+        {
+            transform.SetParent(null);
+        }
+    }
+
     public void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.GetComponent<PowerUp>() != null)
@@ -119,5 +160,18 @@ public class PlayerController : MonoBehaviour
             collision.GetComponent<PowerUp>().ApplyEffect();
 
         }
+    }
+
+
+    public void ApplyBulletChanges(float speed, Color color)
+    {
+        bulletSpeed = speed;
+        bulletColor = color;
+
+    }
+
+    public void ResetBullet()
+    {
+        ApplyBulletChanges(defaultBulletSpeed, defaultBulletColor);
     }
 }
