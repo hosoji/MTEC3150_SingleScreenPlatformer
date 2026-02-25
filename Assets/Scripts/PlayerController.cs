@@ -17,7 +17,7 @@ public class PlayerController : MonoBehaviour
 
     private float facingDirection;
 
-    private float attackOffset = 0.8f;
+    public float attackOffset = 0.8f;
 
     public float meleeDuration = 0.25f;
     private float timeElapsedSinceMelee = 0;
@@ -31,6 +31,14 @@ public class PlayerController : MonoBehaviour
     public Color bulletColor = Color.yellow;
     private Color defaultBulletColor;
 
+    private SpriteRenderer sr;
+    private SpriteRenderer meleeSR;
+    private Animator anim;
+
+    public AudioClip jumpClip, attackClip, landingClip;
+
+    private AudioSource audioSource;
+
 
     void Start()
     {
@@ -38,6 +46,12 @@ public class PlayerController : MonoBehaviour
         facingDirection = 1;
         defaultBulletSpeed = bulletSpeed;
         defaultBulletColor = bulletColor;
+
+        sr = GetComponentInChildren<SpriteRenderer>();
+        meleeSR = meleeAttack.GetComponent<SpriteRenderer>();
+        anim = GetComponentInChildren<Animator>();
+
+        audioSource = GetComponent<AudioSource>();
 
     }
 
@@ -47,6 +61,8 @@ public class PlayerController : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Space) && IsGrounded())
         {
+            audioSource.PlayOneShot(jumpClip);
+            anim.SetTrigger("Jump");
             jumpFlag = true;
         }
 
@@ -63,7 +79,25 @@ public class PlayerController : MonoBehaviour
 
         if (xMove != 0)
         {
+
+            anim.SetBool("Walking", true);
+
             facingDirection = xMove;
+
+
+            if (facingDirection > 0)
+            {
+                sr.flipX = false;
+            }
+            else
+            {
+                sr.flipX = true;
+            }
+        }
+        else
+        {
+            anim.SetBool("Walking", false);
+
         }
 
         if (meleeTriggered)
@@ -92,6 +126,8 @@ public class PlayerController : MonoBehaviour
         xVelocity = xMove * movementSpeed * Time.deltaTime;
         rb.linearVelocity = new Vector3(xVelocity, rb.linearVelocity.y, 0);
 
+        anim.SetFloat("YVelo", rb.linearVelocityY);
+
         if (jumpFlag)
         {
             rb.linearVelocityY = jumpSpeed;
@@ -103,8 +139,12 @@ public class PlayerController : MonoBehaviour
 
     private void MeleeAttack()
     {
+        audioSource.PlayOneShot(attackClip);
+
+        anim.SetTrigger("Attack");
         meleeTriggered = true;
         meleeAttack.SetActive(true);
+        meleeSR.flipX = sr.flipX;
         meleeAttack.transform.localPosition = new Vector3(attackOffset * facingDirection, meleeAttack.transform.localPosition.y, 0);
     }
 
@@ -119,6 +159,12 @@ public class PlayerController : MonoBehaviour
         bScript.speed = bulletSpeed;
         
 
+    }
+
+    private void OnLanding()
+    {
+        anim.SetTrigger("Landed");
+        audioSource.PlayOneShot(landingClip);
     }
 
     private bool IsGrounded()
@@ -159,6 +205,14 @@ public class PlayerController : MonoBehaviour
         {
             collision.GetComponent<PowerUp>().ApplyEffect();
 
+        }
+    }
+
+    public void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("Ground"))
+        {
+            OnLanding();   
         }
     }
 
